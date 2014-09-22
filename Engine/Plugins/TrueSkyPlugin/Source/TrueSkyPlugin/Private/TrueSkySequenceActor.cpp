@@ -13,6 +13,9 @@ ATrueSkySequenceActor::ATrueSkySequenceActor(const class FPostConstructInitializ
 	PrimaryActorTick.bStartWithTickEnabled	=true;
 	SetTickGroup( TG_PrePhysics);
 	SetActorTickEnabled(true);
+	ActorCrossThreadProperties *A	=GetActorCrossThreadProperties();
+	if(A)
+		A->Destroyed=false;
 }
 
 ATrueSkySequenceActor::~ATrueSkySequenceActor()
@@ -55,7 +58,7 @@ void ATrueSkySequenceActor::SetTime( float value )
 }
 
 
-float ATrueSkySequenceActor::GetFloat(FString name )
+float ATrueSkySequenceActor::GetFloat(FString name ) const
 {
 	return ITrueSkyPlugin::Get().GetRenderFloat(name);
 }
@@ -65,7 +68,7 @@ void ATrueSkySequenceActor::SetFloat(FString name, float value )
 	ITrueSkyPlugin::Get().SetRenderFloat(name,value);
 }
 
-int32 ATrueSkySequenceActor::GetInt(FString name )
+int32 ATrueSkySequenceActor::GetInt(FString name ) const
 {
 	return ITrueSkyPlugin::Get().GetRenderInt(name);
 }
@@ -75,31 +78,43 @@ void ATrueSkySequenceActor::SetInt(FString name, int32 value )
 	ITrueSkyPlugin::Get().SetRenderInt(name,value);
 }
 
-float ATrueSkySequenceActor::GetKeyframeFloat(uint32 k,FString name )
+float ATrueSkySequenceActor::GetKeyframeFloat(int32 keyframeUid,FString name ) const
 {
-	return ITrueSkyPlugin::Get().GetKeyframeFloat(k,name);
+	return ITrueSkyPlugin::Get().GetKeyframeFloat(keyframeUid,name);
 }
 
-void ATrueSkySequenceActor::SetKeyframeFloat(uint32 k,FString name, float value )
+void ATrueSkySequenceActor::SetKeyframeFloat(int32 keyframeUid,FString name, float value )
 {
-	ITrueSkyPlugin::Get().SetKeyframeFloat(k,name,value);
+	ITrueSkyPlugin::Get().SetKeyframeFloat(keyframeUid,name,value);
 }
 
-int32 ATrueSkySequenceActor::GetKeyframeInt(uint32 k,FString name )
+int32 ATrueSkySequenceActor::GetKeyframeInt(int32 keyframeUid,FString name ) const
 {
-	return ITrueSkyPlugin::Get().GetKeyframeInt(k,name);
+	return ITrueSkyPlugin::Get().GetKeyframeInt(keyframeUid,name);
 }
 
-void ATrueSkySequenceActor::SetKeyframeInt(uint32 k,FString name, int32 value )
+void ATrueSkySequenceActor::SetKeyframeInt(int32 keyframeUid,FString name, int32 value )
 {
-	ITrueSkyPlugin::Get().SetKeyframeInt(k,name,value);
+	ITrueSkyPlugin::Get().SetKeyframeInt(keyframeUid,name,value);
+}
+
+int32 ATrueSkySequenceActor::GetNextModifiableSkyKeyframe() const
+{
+	return ITrueSkyPlugin::Get().GetRenderInt("NextModifiableSkyKeyframe");
+}
+	
+int32 ATrueSkySequenceActor::GetNextModifiableCloudKeyframe(int32 layer) const
+{
+	return ITrueSkyPlugin::Get().GetRenderInt("NextModifiableCloudKeyframe");
 }
 
 FRotator ATrueSkySequenceActor::GetSunRotation() const
 {
 	float azimuth	=ITrueSkyPlugin::Get().GetRenderFloat("SunAzimuthDegrees");
 	float elevation	=ITrueSkyPlugin::Get().GetRenderFloat("SunElevationDegrees");
-	FRotator sunRotation(-elevation,-azimuth,0.0f);
+	static float m1=-1.0f,m2=1.0f,m3=0,m4=0;
+	static float c1=0.0f,c2=180.0f,c3=0.0f;
+	FRotator sunRotation(c1+m1*elevation,c2+m2*azimuth,c3+m3*elevation+m4*azimuth);
 	return sunRotation;
 }
 

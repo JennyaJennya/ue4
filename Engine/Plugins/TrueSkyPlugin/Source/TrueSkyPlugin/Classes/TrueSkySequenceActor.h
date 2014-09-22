@@ -17,28 +17,28 @@ class ATrueSkySequenceActor : public AActor
 	void SetTime( float value );
 	
 	UFUNCTION(BlueprintCallable, Category=TrueSky)
-	float GetFloat(FString name );
+	float GetFloat(FString name ) const;
 
 	UFUNCTION(BlueprintCallable, Category=TrueSky)
 	void SetFloat(FString name, float value );
 
 	UFUNCTION(BlueprintCallable, Category=TrueSky)
-	int32 GetInt(FString name );
+	int32 GetInt(FString name ) const;
 
 	UFUNCTION(BlueprintCallable, Category=TrueSky)
 	void SetInt(FString name, int32 value );
 
 	UFUNCTION(BlueprintCallable, Category=TrueSky)
-	float GetKeyframeFloat(uint32 k,FString name );
+	float GetKeyframeFloat(int32 keyframeUid,FString name ) const;
 
 	UFUNCTION(BlueprintCallable, Category=TrueSky)
-	void SetKeyframeFloat(uint32 k,FString name, float value );
+	void SetKeyframeFloat(int32 keyframeUid,FString name, float value );
 
 	UFUNCTION(BlueprintCallable, Category=TrueSky)
-	int32 GetKeyframeInt(uint32 k,FString name );
+	int32 GetKeyframeInt(int32 keyframeUid,FString name ) const;
 
 	UFUNCTION(BlueprintCallable, Category=TrueSky)
-	void SetKeyframeInt(uint32 k,FString name, int32 value );
+	void SetKeyframeInt(int32 keyframeUid,FString name, int32 value );
 
 	UFUNCTION(BlueprintCallable, Category=TrueSky)
 	FRotator GetSunRotation() const;
@@ -48,6 +48,12 @@ class ATrueSkySequenceActor : public AActor
 
 	UPROPERTY(EditAnywhere, Category=TrueSky)
 	class UTrueSkySequenceAsset* ActiveSequence;
+
+	UFUNCTION(BlueprintCallable, Category=TrueSky)
+	int32 GetNextModifiableSkyKeyframe() const;
+	
+	UFUNCTION(BlueprintCallable, Category=TrueSky)
+	int32 GetNextModifiableCloudKeyframe(int32 layer) const;
 
 	//UPROPERTY(EditAnywhere, Category=TrueSky)
 	//UTextureRenderTarget2D* CloudShadowRenderTarget;

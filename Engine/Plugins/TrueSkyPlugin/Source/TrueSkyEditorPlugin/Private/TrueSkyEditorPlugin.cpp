@@ -15,7 +15,7 @@
 #include "IDocumentation.h"
 #include "AssetToolsModule.h"
 #endif
-//#include "SlateStyle.h"
+
 #include "GenericWindow.h"
 #include "WindowsWindow.h"
 #include "RendererInterface.h"
@@ -54,12 +54,6 @@ extern ActorCrossThreadProperties *GetActorCrossThreadProperties()
 #include "D3D11Resources.h"
 #include "D3D11Viewport.h"
 #include "D3D11ConstantBuffer.h"
-//#include "../Private/Windows/D3D11StateCache.h"
-#include "../Private/D3D11StateCachePrivate.h"
-
-typedef FD3D11StateCacheBase FD3D11StateCache;
-
-
 
 #include "D3D11Resources.h"
 #include "Tickable.h"

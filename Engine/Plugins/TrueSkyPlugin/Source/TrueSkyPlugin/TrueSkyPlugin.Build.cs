@@ -6,6 +6,8 @@ namespace UnrealBuildTool.Rules
 	{
 		public TrueSkyPlugin(TargetInfo Target)
 		{
+			//string trueSKYPath=UEBuildConfiguration.UEThirdPartySourceDirectory+"Vorbis/libvorbis-1.3.2/";
+
 			PublicIncludePaths.AddRange(
 					new string[] {
 					"Core",
@@ -76,7 +78,20 @@ namespace UnrealBuildTool.Rules
 				
 				);
 
-
+			//PublicAdditionalLibraries.Add("libvorbis.lib");
+				
+			PublicDelayLoadDLLs.Add("SimulBase_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulCamera_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulClouds_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulCrossPlatform_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulDirectX11_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulGeometry_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulMath_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulMeta_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulScene_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulSky_MD.dll");
+			PublicDelayLoadDLLs.Add("SimulTerrain_MD.dll");
+			PublicDelayLoadDLLs.Add("TrueSkyPluginRender_MD.dll");
 		}
 	}
 }

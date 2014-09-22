@@ -1,6 +1,4 @@
-
-// Replace the string above with your own licence key!
-
+// The licence key has moved - put yours in ../../TrueSkyEditorPlugin/Private/TrueSkyEditorPlugin.cpp!
 // Copyright 2013-2014 Simul Software Ltd. All Rights Reserved.
 
 #include "TrueSkyPluginPrivatePCH.h"
@@ -131,6 +129,26 @@ static std::string FStringToUtf8(const FString &Source)
 	std::string str_utf8=std::string(output_buffer);
 	delete [] output_buffer;
 	return str_utf8;
+}
+
+static FString Utf8ToFString(const char *src_utf8)
+{
+	int src_length=(int)strlen(src_utf8);
+#ifdef _MSC_VER
+	int length = MultiByteToWideChar(CP_UTF8, 0, src_utf8,src_length, 0, 0);
+#else
+	int length=src_length;
+#endif
+	wchar_t *output_buffer = new wchar_t [length+1];
+#ifdef _MSC_VER
+	MultiByteToWideChar(CP_UTF8, 0, src_utf8, src_length, output_buffer, length);
+#else
+	mbstowcs(output_buffer, src_utf8, (size_t)length );
+#endif
+	output_buffer[length]=0;
+	FString wstr=FString(output_buffer);
+	delete [] output_buffer;
+	return wstr;
 }
 #define DECLARE_TOGGLE(name)\
 	void					OnToggle##name();\
@@ -425,7 +443,7 @@ IMPLEMENT_MODULE( FTrueSkyPlugin, TrueSkyPlugin )
 FTrueSkyPlugin* FTrueSkyPlugin::Instance = NULL;
 
 //TSharedRef<FTrueSkyPlugin> staticSharedRef;
-static std::string trueSkyPluginPath="../../Plugins/TrueSkyPlugin";
+static FString trueSkyPluginPath="../../Plugins/TrueSkyPlugin";
 FTrueSkyPlugin::FTrueSkyPlugin()
 	:cloudShadowRenderTarget(NULL)
 	,actorPropertiesChanged(true)
@@ -884,19 +902,7 @@ void FTrueSkyPlugin::OnDebugTrueSky(class UCanvas* Canvas, APlayerController*)
 
 	UFont* RenderFont = GEngine->GetSmallFont();
 	Canvas->DrawText(RenderFont, FString("trueSKY Debug Display"), 0.3f, 0.3f, 1.f, 1.f, FontRenderInfo);
-	/*
-		
-	float res=Canvas->DrawText
-	(
-    UFont * InFont,
-    const FString & InText,
-    float X,
-    float Y,
-    float XScale,
-    float YScale,
-    const FFontRenderInfo & RenderInfo
-)
-		*/
+
 	Canvas->SetDrawColor(OldDrawColor);
 }
 
@@ -1038,17 +1044,18 @@ static HWND GetSWindowHWND(const TSharedPtr<SWindow>& Window)
 #endif
 bool FTrueSkyPlugin::InitRenderingInterface(  )
 {
-#if 0
-	const TCHAR* const DllPath =L"TrueSkyPluginRender_MDd.dll";
-#else
-	const TCHAR* const DllPath =L"TrueSkyPluginRender_MD.dll";
-#endif
-	check(DllPath);
+	FString DllPath(FPaths::Combine(*FPaths::EngineDir(), TEXT("Binaries/ThirdParty/Simul/Win64")));
+	FString DllFilename(FPaths::Combine(*DllPath, TEXT("TrueSkyPluginRender_MD.dll")));
+	if( !FPaths::FileExists(DllFilename) )
+	{
+		UE_LOG(TrueSky,Warning,TEXT("TrueSkyPluginRender_MD DLL not present - disabling."));
+		return false;
+	}
 
-	void* const DllHandle = FPlatformProcess::GetDllHandle( DllPath );
+	void* const DllHandle = FPlatformProcess::GetDllHandle((const TCHAR*)DllFilename.GetCharArray().GetData() );
 	if(DllHandle==NULL)
 	{
-		UE_LOG(TrueSky, Warning, TEXT("Failed to load %s"), DllPath);
+		UE_LOG(TrueSky, Warning, TEXT("Failed to load %s"), (const TCHAR*)DllFilename.GetCharArray().GetData() );
 	}
 	if ( DllHandle != NULL )
 	{
@@ -1096,18 +1103,18 @@ bool FTrueSkyPlugin::InitRenderingInterface(  )
 
 		StaticInitInterface(  );
 		
+		FString shaderbin=FPaths::EngineDir()+L"\\Binaries\\ThirdParty\\Simul\\shaderbin";
+		StaticPushPath("ShaderBinaryPath",FStringToUtf8(shaderbin).c_str());
 		if(haveEditor)
 		{
-			StaticPushPath("ShaderPath",(trueSkyPluginPath+"\\Resources\\Platform\\DirectX11\\HLSL").c_str());
-			StaticPushPath("ShaderBinaryPath",(trueSkyPluginPath+"\\Resources\\Platform\\DirectX11\\shaderbin").c_str());
-			StaticPushPath("TexturePath",(trueSkyPluginPath+"\\Resources\\Media\\Textures").c_str());
+			StaticPushPath("ShaderPath",FStringToUtf8(trueSkyPluginPath+"\\Resources\\Platform\\DirectX11\\HLSL").c_str());
+			StaticPushPath("TexturePath",FStringToUtf8(trueSkyPluginPath+"\\Resources\\Media\\Textures").c_str());
 		}
 		else
 		{
-			static std::string gamePath="../../";
-			StaticPushPath("ShaderPath",(gamePath+"\\Content\\TrueSkyPlugin\\Platform\\DirectX11\\HLSL").c_str());
-			StaticPushPath("ShaderBinaryPath",(gamePath+"\\Content\\TrueSkyPlugin\\Platform\\DirectX11\\shaderbin").c_str());
-			StaticPushPath("TexturePath",(gamePath+"\\Content\\TrueSkyPlugin\\Media\\Textures").c_str());
+			static FString gamePath="../../";
+			StaticPushPath("ShaderPath",FStringToUtf8(gamePath+L"\\Content\\TrueSkyPlugin\\Platform\\DirectX11\\HLSL").c_str());
+			StaticPushPath("TexturePath",FStringToUtf8(gamePath+L"\\Content\\TrueSkyPlugin\\Media\\Textures").c_str());
 		}
 		
 		// IF there's a "SIMUL" env variable, we can build shaders direct from there:
@@ -1139,11 +1146,10 @@ void FTrueSkyPlugin::InitPaths()
 		{
 			return;
 		}
-		std::wstring PathEnv = p;
-		std::wstring trueSkyPluginPathW=Utf8ToWString(trueSkyPluginPath.c_str());
-		PathEnv=(trueSkyPluginPathW+L"\\Binaries\\Win64;")+PathEnv;
-
-		SetEnvironmentVariable( L"PATH", PathEnv.c_str());
+		FString PathEnv = p;
+		PathEnv=(trueSkyPluginPath+L"\\Binaries\\Win64;")+PathEnv;
+		FString str=FPaths::EngineDir()+L"\\Binaries\\ThirdParty\\Simul\\Win64;"+PathEnv;
+		SetEnvironmentVariable( L"PATH", str.GetCharArray().GetData());
 	}
 }
 
