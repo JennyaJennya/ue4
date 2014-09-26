@@ -342,8 +342,6 @@ protected:
 	typedef char* (*FGetSequence)(HWND, FAlloc);
 	typedef void (*FOnTimeChangedCallback)(HWND,float);
 	typedef void (*FSetOnTimeChangedInUICallback)(FOnTimeChangedCallback);
-	typedef void (*FOnSequenceChangeCallback)(HWND,const char *);
-	typedef void (*FSetOnPropertiesChangedCallback)( FOnSequenceChangeCallback);
 
 	typedef int (*FStaticInitInterface)(  );
 	typedef int (*FStaticPushPath)(const char*,const char*);
@@ -386,7 +384,6 @@ protected:
 	FPushStyleSheetPath					PushStyleSheetPath;
 	FSetSequence						SetSequence;
 	FGetSequence						GetSequence;
-	FSetOnPropertiesChangedCallback		SetOnPropertiesChangedCallback;
 	FSetOnTimeChangedInUICallback		SetOnTimeChangedInUICallback;
 	FStaticInitInterface				StaticInitInterface;
 	FStaticPushPath						StaticPushPath;
@@ -442,7 +439,7 @@ IMPLEMENT_MODULE( FTrueSkyPlugin, TrueSkyPlugin )
 
 FTrueSkyPlugin* FTrueSkyPlugin::Instance = NULL;
 
-//TSharedRef<FTrueSkyPlugin> staticSharedRef;
+
 static FString trueSkyPluginPath="../../Plugins/TrueSkyPlugin";
 FTrueSkyPlugin::FTrueSkyPlugin()
 	:cloudShadowRenderTarget(NULL)
@@ -451,7 +448,6 @@ FTrueSkyPlugin::FTrueSkyPlugin()
 {
 	Instance = this;
 #ifdef SHARED_FROM_THIS
-	//TSharedRef<FTrueSkyPlugin> sharedRef=AsShared();
 TSharedRef< FTrueSkyPlugin,(ESPMode::Type)0 > ref=AsShared();
 #endif
 #if INCLUDE_UE_EDITOR_FEATURES
@@ -812,7 +808,6 @@ void FTrueSkyPlugin::StartupModule()
 	PushStyleSheetPath				= NULL;
 	SetSequence						= NULL;
 	GetSequence						= NULL;
-	SetOnPropertiesChangedCallback	= NULL;
 	SetOnTimeChangedInUICallback	= NULL;
 
 	RenderingEnabled				=false;

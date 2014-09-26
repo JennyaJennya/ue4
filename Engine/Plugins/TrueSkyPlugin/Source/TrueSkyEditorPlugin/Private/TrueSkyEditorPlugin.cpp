@@ -178,6 +178,7 @@ protected:
 	/** Called when the Toggle Fades Overlay button is pressed*/
 	DECLARE_TOGGLE(ShowFades)
 	DECLARE_TOGGLE(ShowCompositing)
+	DECLARE_TOGGLE(ShowCelestialDisplay)
 	DECLARE_TOGGLE(Show3DCloudTextures)
 	DECLARE_TOGGLE(Show2DCloudTextures)
 	DECLARE_ACTION(RecompileShaders)
@@ -295,6 +296,7 @@ public:
 	virtual void RegisterCommands() override
 	{
 		UI_COMMAND(AddSequence				,"Add Sequence To Scene","Adds a TrueSkySequenceActor to the current scene", EUserInterfaceActionType::Button, FInputGesture());
+		UI_COMMAND(ToggleShowCelestialDisplay,"Celestial Display"			,"Toggles the celestial display.", EUserInterfaceActionType::ToggleButton, FInputGesture());
 		UI_COMMAND(ToggleFades				,"Atmospheric Tables"	,"Toggles the atmospheric tables overlay.", EUserInterfaceActionType::ToggleButton, FInputGesture());
 		UI_COMMAND(ToggleShowCompositing	,"Compositing"			,"Toggles the compositing overlay.", EUserInterfaceActionType::ToggleButton, FInputGesture());
 		UI_COMMAND(ToggleShow3DCloudTextures,"Show 3D Cloud Textures","Toggles the 3D cloud overlay.", EUserInterfaceActionType::ToggleButton, FInputGesture());
@@ -305,6 +307,7 @@ public:
 public:
 	TSharedPtr<FUICommandInfo> AddSequence;
 	TSharedPtr<FUICommandInfo> ToggleFades;
+	TSharedPtr<FUICommandInfo> ToggleShowCelestialDisplay;
 	TSharedPtr<FUICommandInfo> ToggleShowCompositing;
 	TSharedPtr<FUICommandInfo> ToggleShow3DCloudTextures;
 	TSharedPtr<FUICommandInfo> ToggleShow2DCloudTextures;
@@ -434,6 +437,11 @@ void FTrueSkyEditorPlugin::StartupModule()
 									FExecuteAction::CreateRaw(this, &FTrueSkyEditorPlugin::ShowDocumentation)
 									);
 		{
+			CommandList->MapAction( FTrueSkyCommands::Get().ToggleShowCelestialDisplay,
+									FExecuteAction::CreateRaw(this, &FTrueSkyEditorPlugin::OnToggleShowCelestialDisplay),
+									FCanExecuteAction::CreateRaw(this, &FTrueSkyEditorPlugin::IsMenuEnabled),
+									FIsActionChecked::CreateRaw(this, &FTrueSkyEditorPlugin::IsToggledShowCelestialDisplay)
+									);
 			CommandList->MapAction( FTrueSkyCommands::Get().ToggleFades,
 									FExecuteAction::CreateRaw(this, &FTrueSkyEditorPlugin::OnToggleShowFades),
 									FCanExecuteAction::CreateRaw(this, &FTrueSkyEditorPlugin::IsMenuEnabled),
@@ -575,6 +583,7 @@ void FTrueSkyEditorPlugin::FillMenu( FMenuBuilder& MenuBuilder )
 	
 void FTrueSkyEditorPlugin::FillOverlayMenu(FMenuBuilder& MenuBuilder)
 {		
+	MenuBuilder.AddMenuEntry(FTrueSkyCommands::Get().ToggleShowCelestialDisplay);
 	MenuBuilder.AddMenuEntry(FTrueSkyCommands::Get().ToggleFades);
 	MenuBuilder.AddMenuEntry(FTrueSkyCommands::Get().ToggleShowCompositing);
 	MenuBuilder.AddMenuEntry(FTrueSkyCommands::Get().ToggleShow3DCloudTextures);
@@ -892,7 +901,7 @@ void FTrueSkyEditorPlugin::SEditorInstance::SaveSequenceData()
 
 			// Mark as dirty
 			Asset->Modify( true );
-
+			
 			delete OutputText;
 		}
 	}
@@ -990,6 +999,7 @@ void FTrueSkyEditorPlugin::OnToggleRendering()
 
 IMPLEMENT_TOGGLE(ShowFades)
 IMPLEMENT_TOGGLE(ShowCompositing)
+IMPLEMENT_TOGGLE(ShowCelestialDisplay)
 IMPLEMENT_TOGGLE(Show3DCloudTextures)
 IMPLEMENT_TOGGLE(Show2DCloudTextures)
 
