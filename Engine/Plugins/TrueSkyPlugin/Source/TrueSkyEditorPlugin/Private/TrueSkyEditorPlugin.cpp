@@ -134,6 +134,8 @@ public:
 	{
 		/** Editor window */
 		TSharedPtr<SWindow>		EditorWindow;
+		/** Dockable tab */
+		TSharedPtr< SDockableTab > DockableTab;
 		/** Editor widow HWND */
 		HWND					EditorWindowHWND;
 		/** Original window message procedure */
@@ -709,7 +711,40 @@ static std::string WStringToUtf8(const wchar_t *src_w)
 	delete [] output_buffer;
 	return str_utf8;
 }
+/*
 
+TSharedRef<SDockTab> FMaterialInstanceEditor::SpawnTab_Parents( const FSpawnTabArgs& Args )
+{	
+	check( Args.GetTabId().TabType == ParentsTabId );
+
+	TSharedRef<SDockTab> SpawnedTab = SNew(SDockTab)
+		.Icon( FEditorStyle::GetBrush("MaterialInstanceEditor.Tabs.Parents") )
+		.Label( LOCTEXT("MaterialParentsTitle", "Instance Parents") )
+		[
+			MaterialInstanceParentsList.ToSharedRef()
+		];
+
+	RebuildInheritanceList();
+
+	AddToSpawnedToolPanels( Args.GetTabId().TabType, SpawnedTab );
+	return SpawnedTab;
+}
+
+
+void FMaterialInstanceEditor::AddToSpawnedToolPanels( const FName& TabIdentifier, const TSharedRef<SDockTab>& SpawnedTab )
+{
+	TWeakPtr<SDockTab>* TabSpot = SpawnedToolPanels.Find(TabIdentifier);
+	if (!TabSpot)
+	{
+		SpawnedToolPanels.Add(TabIdentifier, SpawnedTab);
+	}
+	else
+	{
+		check(!TabSpot->IsValid());
+		*TabSpot = SpawnedTab;
+	}
+}
+*/
 #if UE_EDITOR
 #define warnf(expr, ...)				{ if(!(expr)) FDebug::AssertFailed( #expr, __FILE__, __LINE__, ##__VA_ARGS__ ); CA_ASSUME(expr); }
 FTrueSkyEditorPlugin::SEditorInstance* FTrueSkyEditorPlugin::CreateEditorInstance(   void* Env )
@@ -757,6 +792,8 @@ FTrueSkyEditorPlugin::SEditorInstance* FTrueSkyEditorPlugin::CreateEditorInstanc
 		{
 			SEditorInstance EditorInstance;
 			memset(&EditorInstance, 0, sizeof(EditorInstance));
+
+			TSharedRef<SDockTab> SpawnedTab = SNew(SDockTab);
 
 			EditorInstance.EditorWindow = SNew(SWindow)
 				.Title( FText::FromString(TEXT("TrueSky")) )
