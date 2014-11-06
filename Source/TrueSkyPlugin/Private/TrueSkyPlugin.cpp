@@ -31,6 +31,8 @@ DEFINE_LOG_CATEGORY_STATIC(TrueSky, Log, All);
 #include "GPUProfiler.h"
 #include "ShaderCore.h"
 #include "Engine.h"
+#include "SceneUtils.h"	// For SCOPED_DRAW_EVENT
+
 #ifdef INCLUDE_UE_EDITOR_FEATURES
 DECLARE_LOG_CATEGORY_EXTERN(LogD3D11RHI, Log, All);
 #endif
@@ -858,13 +860,12 @@ void FTrueSkyPlugin::RenderFrame( FPostOpaqueRenderParameters& RenderParameters 
 	UpdateFromActor();
 	if(!RenderingEnabled )
 		return;
-	SCOPED_DRAW_EVENT(TrueSkyRenderFrame, FColor( 0, 0, 255 ) );
+	//SCOPED_DRAW_EVENT(RHICmdList, TrueSkyRenderFrame, FColor(0, 0, 255));
 	if( RenderingEnabled )
 	{
 		FSceneView *View=(FSceneView*)(RenderParameters.Uid);
 		StaticTick( 0 );
 
-		//FD3D11DynamicRHI * d3d11rhi = (FD3D11DynamicRHI*)GDynamicRHI;
 		ID3D11Device * device =(ID3D11Device *)GDynamicRHI->RHIGetNativeDevice();
 		ID3D11DeviceContext * context =NULL;// d3d11rhi->GetDeviceContext();
 		device->GetImmediateContext(&context);

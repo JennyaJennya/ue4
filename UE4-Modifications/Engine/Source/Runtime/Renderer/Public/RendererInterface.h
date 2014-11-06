@@ -412,6 +412,7 @@ enum EDrawRectangleFlags
 	EDRF_UseTriangleOptimization
 };
 
+/// BEGIN trueSKY Additional code
 class FPostOpaqueRenderParameters
 {
 	public:
@@ -422,9 +423,8 @@ class FPostOpaqueRenderParameters
 		FRHITexture2D * SmallDepthTexture;
 		void *Uid; ///< A unique identifier for the view.
 };
-
-
 DECLARE_DELEGATE_OneParam(FPostOpaqueRenderDelegate, class FPostOpaqueRenderParameters& );
+/// END trueSKY Additional code
 
 
 /**
@@ -477,10 +477,8 @@ public:
 	/** Renderer gets a chance to log some useful crash data */
 	virtual void DebugLogOnCrash() = 0;
 
-	/**  */
 	// @param WorkScale >0, 10 for normal precision and runtime of less than a second
-	// @param bDebugOut has no effect in shipping
-	virtual void GPUBenchmark(FSynthBenchmarkResults& InOut, uint32 WorkScale = 10, bool bDebugOut = false) = 0;
+	virtual void GPUBenchmark(FSynthBenchmarkResults& InOut, float WorkScale = 10.0f) = 0;
 
 	virtual void QueryVisualizeTexture(FQueryVisualizeTexureInfo& Out) = 0;
 	virtual void ExecVisualizeTextureCmd(const FString& Cmd) = 0;
@@ -520,11 +518,11 @@ public:
 
 	/** @return Returns a vertex declaration that can be used with with the DrawRectangle() function */
 	virtual TGlobalResource<FFilterVertexDeclaration>& GetFilterVertexDeclaration() = 0;
-
+ /// BEGIN trueSKY Additional code
 	virtual void RegisterPostOpaqueRenderDelegate( const FPostOpaqueRenderDelegate& PostOpaqueRenderDelegate ) = 0;
 	virtual void RenderPostOpaqueExtensions( const FSceneView& View ) = 0;
+/// END trueSKY Additional code
 };
-
 
 
 #endif

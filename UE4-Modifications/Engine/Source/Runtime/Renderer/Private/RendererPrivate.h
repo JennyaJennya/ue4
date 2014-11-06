@@ -34,7 +34,7 @@ public:
 	virtual void RenderTargetPoolFindFreeElement(const FPooledRenderTargetDesc& Desc, TRefCountPtr<IPooledRenderTarget> &Out, const TCHAR* InDebugName) override;
 	virtual void TickRenderTargetPool() override;
 	virtual void DebugLogOnCrash() override;
-	virtual void GPUBenchmark(FSynthBenchmarkResults& InOut, uint32 WorkScale, bool bDebugOut) override;
+	virtual void GPUBenchmark(FSynthBenchmarkResults& InOut, float WorkScale) override;
 	virtual void QueryVisualizeTexture(FQueryVisualizeTexureInfo& Out) override;
 	virtual void ExecVisualizeTextureCmd(const FString& Cmd) override;
 	virtual void UpdateMapNeedsLightingFullyRebuiltState(UWorld* World) override;
@@ -60,12 +60,15 @@ public:
 		return AllocatedScenes;
 	}
 
-	virtual void RegisterPostOpaqueRenderDelegate( const FPostOpaqueRenderDelegate& PostOpaqueRenderDelegate ) override;
-	virtual void RenderPostOpaqueExtensions( const FSceneView& View ) override;
-
 private:
 	TSet<FSceneInterface*> AllocatedScenes;
-	FPostOpaqueRenderDelegate PostOpaqueRenderDelegate;
+	/// BEGIN trueSKY Additional code
+public:
+	virtual void RegisterPostOpaqueRenderDelegate( const FPostOpaqueRenderDelegate& PostOpaqueRenderDelegate ) override;
+	virtual void RenderPostOpaqueExtensions( const FSceneView& View ) override;
+private:
+ FPostOpaqueRenderDelegate PostOpaqueRenderDelegate;
+/// END trueSKY Additional code
 };
 
 #endif
