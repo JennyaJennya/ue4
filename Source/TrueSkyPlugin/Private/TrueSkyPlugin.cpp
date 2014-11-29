@@ -354,8 +354,7 @@ protected:
 		, ID3D11Texture2D* depthTexture
 		,ID3D11ShaderResourceView* depthResource
 		,const Viewport *v
-		,PluginStyle s);
-
+		,PluginStyle s,float exposure,float gamma);
 	typedef int (*FStaticTick)( float deltaTime );
 	typedef int (*FStaticOnDeviceChanged)( void * device );
 	typedef void* (*FStaticGetEnvironment)();
@@ -882,9 +881,10 @@ void FTrueSkyPlugin::RenderFrame( FPostOpaqueRenderParameters& RenderParameters 
 		v.h=RenderParameters.ViewportRect.Height();
 		unsigned uid=((unsigned)v.w<<(unsigned)24)+((unsigned)v.h<<(unsigned)16)+((unsigned)View->StereoPass);
         int view_id = StaticGetOrAddView((void*)uid);		// RVK: really need a unique view ident to pass here..
+		static float exposure=1.f,gamma=1.f;
 		StaticRenderFrame( device,view_id, &(mirroredViewMatrix.M[0][0]), &(RenderParameters.ProjMatrix.M[0][0])
 			,(ID3D11Texture2D*)depthTex->GetResource(),depthTex->GetShaderResourceView(),&v
-							 ,UNREAL_STYLE);
+							 ,UNREAL_STYLE,exposure,gamma);
 		RenderCloudShadow();
 	}
 }

@@ -1,6 +1,3 @@
-#define TRUESKY_LICENCE_KEY "Enter LicenceKey"
-// Replace the string above with your own licence key!
-
 // Copyright 2013-2014 Simul Software Ltd. All Rights Reserved.
 
 #include "TrueSkyEditorPluginPrivatePCH.h"
@@ -218,6 +215,8 @@ protected:
 	typedef char* (*FGetSequence)(HWND, FAlloc);
 	typedef void (*FOnTimeChangedCallback)(HWND,float);
 	typedef void (*FSetOnTimeChangedInUICallback)(FOnTimeChangedCallback);
+	typedef void (*FTrueSkyUILogCallback)(const char *);
+	typedef void (*FSetTrueSkyUILogCallback)(FTrueSkyUILogCallback);
 	typedef void (*FOnSequenceChangeCallback)(HWND,const char *);
 	typedef void (*FSetOnPropertiesChangedCallback)( FOnSequenceChangeCallback);
 
@@ -255,6 +254,7 @@ protected:
 	FStaticOnDeviceChanged				StaticOnDeviceChanged;
 	FStaticSetSequence					StaticSetSequence;
 	FStaticTriggerAction				StaticTriggerAction;
+	FSetTrueSkyUILogCallback			SetTrueSkyUILogCallback;
 
 	TCHAR*					PathEnv;
 
@@ -271,7 +271,7 @@ protected:
 	static ::UINT			MessageId;
 #endif
 	static void				OnSequenceChangeCallback(HWND OwnerHWND,const char *);
-	
+	static void				TrueSkyUILogCallback(const char *);
 	static void				OnTimeChangedCallback(HWND OwnerHWND,float t);
 	
 	FRenderTarget			*cloudShadowRenderTarget;
@@ -492,6 +492,7 @@ void FTrueSkyEditorPlugin::StartupModule()
 	GetSequence						= NULL;
 	SetOnPropertiesChangedCallback	= NULL;
 	SetOnTimeChangedInUICallback	= NULL;
+	SetTrueSkyUILogCallback			=NULL;
 
 	RenderingEnabled				=false;
 	RendererInitialized				=false;
@@ -540,6 +541,8 @@ void FTrueSkyEditorPlugin::ShutdownModule()
 	// Unregister for debug drawing
 	//UDebugDrawService::Unregister(FDebugDrawDelegate::CreateUObject(this, &FTrueSkyEditorPlugin::OnDebugTrueSky));
 #endif
+	if(SetTrueSkyUILogCallback)
+		SetTrueSkyUILogCallback(NULL);
 #if UE_EDITOR
 	FTrueSkyCommands::Unregister();
 	if ( FModuleManager::Get().IsModuleLoaded("LevelEditor") )
@@ -750,9 +753,9 @@ void FMaterialInstanceEditor::AddToSpawnedToolPanels( const FName& TabIdentifier
 FTrueSkyEditorPlugin::SEditorInstance* FTrueSkyEditorPlugin::CreateEditorInstance(   void* Env )
 {
 #if 0
-	const TCHAR* const DllPath =L"TrueSkyUI_MDd.dll";
+	const TCHAR* const DllPath =L"TrueSkyUI_x64_MDd.dll";
 #else
-	const TCHAR* const DllPath =L"TrueSkyUI_MD.dll";
+	const TCHAR* const DllPath =L"TrueSkyUI_x64_MD.dll";
 #endif
 	void* const DllHandle = FPlatformProcess::GetDllHandle( DllPath );
 	if(DllHandle==NULL)
@@ -772,6 +775,7 @@ FTrueSkyEditorPlugin::SEditorInstance* FTrueSkyEditorPlugin::CreateEditorInstanc
 		GetSequence = (FGetSequence)FPlatformProcess::GetDllExport(DllHandle, TEXT("StaticGetSequence") );
 		SetOnPropertiesChangedCallback = (FSetOnPropertiesChangedCallback)FPlatformProcess::GetDllExport(DllHandle, TEXT("SetOnPropertiesChangedCallback") );
 		SetOnTimeChangedInUICallback = (FSetOnTimeChangedInUICallback)FPlatformProcess::GetDllExport(DllHandle, TEXT("SetOnTimeChangedCallback") );
+		SetTrueSkyUILogCallback = (FSetTrueSkyUILogCallback)FPlatformProcess::GetDllExport(DllHandle, TEXT("SetTrueSkyUILogCallback") );
 
 		checkf( OpenUI, L"OpenUI function not found!" );
 		checkf( CloseUI, L"CloseUI function not found!" );
@@ -780,6 +784,7 @@ FTrueSkyEditorPlugin::SEditorInstance* FTrueSkyEditorPlugin::CreateEditorInstanc
 		checkf( GetSequence, L"GetSequence function not found!" );
 		checkf( SetOnPropertiesChangedCallback, L"SetOnPropertiesChangedCallback function not found!" );
 		checkf( SetOnTimeChangedInUICallback, L"SetOnTimeChangedInUICallback function not found!" );
+		checkf( SetTrueSkyUILogCallback, L"SetTrueSkyUILogCallback function not found!" );
 		
 		checkf( StaticSetUIString, L"StaticSetUIString function not found!" );
 		checkf( StaticGetUIString, L"StaticGetUIString function not found!" );
@@ -827,13 +832,14 @@ FTrueSkyEditorPlugin::SEditorInstance* FTrueSkyEditorPlugin::CreateEditorInstanc
 			//	GetWindowRect(EditorInstance.EditorWindowHWND, &ParentRect);
 
 				OpenUI( EditorInstance.EditorWindowHWND, &ClientRect, &ParentRect, Env, UNREAL_STYLE);
-				SetUIString(&EditorInstance,"LicenceKey",TRUESKY_LICENCE_KEY);
+				
 				// Overload main window's WndProc
 				EditorInstance.OrigEditorWindowWndProc = (WNDPROC)GetWindowLongPtr( EditorInstance.EditorWindowHWND, GWLP_WNDPROC );
 				SetWindowLongPtr( EditorInstance.EditorWindowHWND, GWLP_WNDPROC, (LONG_PTR)EditorWindowWndProc );
 
 				// Setup notification callback
 				SetOnPropertiesChangedCallback(  OnSequenceChangeCallback );
+				SetTrueSkyUILogCallback( TrueSkyUILogCallback );
 				SetOnTimeChangedInUICallback(OnTimeChangedCallback);
 				EditorInstance.EditorWindow->Restore();
 				return &EditorInstances[ EditorInstances.Add(EditorInstance) ];
@@ -978,6 +984,17 @@ void FTrueSkyEditorPlugin::OnSequenceChangeCallback(HWND OwnerHWND,const char *t
 	{
 		EditorInstance->SaveSequenceData();
 	}
+}
+
+void FTrueSkyEditorPlugin::TrueSkyUILogCallback(const char *txt)
+{
+	check( Instance );
+	const wchar_t *w=Utf8ToWString(txt).c_str();
+	TCHAR t[100];
+	wcscpy_s(t,w);
+	if(errno!=0)
+		errno=0;
+	UE_LOG(TrueSky, Log,t);
 }
 
 void FTrueSkyEditorPlugin::OnTimeChangedCallback(HWND OwnerHWND,float t)
